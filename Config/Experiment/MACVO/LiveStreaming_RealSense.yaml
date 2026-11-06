@@ -1,0 +1,76 @@
+# Live Streaming RealSense D435if Profile for IEEE RA-L MAC-VIO
+# Optimized for real-time live execution without TartanVO and without PyPose GPU inversion.
+
+Common:
+  device: &device cuda
+
+Odometry:
+  name: LiveStreaming-RealSense
+  args:
+    device: *device
+    edgewidth: 32
+    num_point: 80 # Fast keypoint count for live tracking
+    match_cov_default: 0.25
+    profile: false
+    mapping: false
+
+  cov:
+    obs:
+      type: MatchCovariance
+      args:
+        device: *device
+        kernel_size: 31
+        match_cov_default: 0.25
+        min_depth_cov: 0.05
+        min_flow_cov: 0.25
+
+  keypoint:
+    type: CovAwareSelector_NoDepth
+    args:
+      device: *device
+      kernel_size: 7
+      mask_width: 32
+      max_match_cov: 100.0
+
+  mappoint:
+    type: MappingPointSelector
+    args:
+      device: *device
+      max_depth: 4.0
+      max_depth_cov: 0.005
+      mask_width: 32
+
+  frontend:
+    type: CUDAGraph_FlowFormerCovFrontend
+    args:
+      device: *device
+      weight: ./Model/MACVO_FrontendCov.pth
+      enc_dtype: fp16
+      dec_dtype: bf16
+      decoder_depth: 12
+      enforce_positive_disparity: false
+
+  motion:
+    type: ConstantVelocityMotionModel
+    args:
+
+  outlier:
+    type: CovarianceSanityFilter
+    args:
+  
+  postprocess:
+    type: MotionInterpolate
+    args:
+  
+  keyframe:
+    type: AllKeyframe # Track every live frame for seamless continuous state estimation
+    args:
+  
+  optimizer:
+    type: DecoupledVIO_PGO # Fast <1ms decoupled optimizer with IMU SO(3) prior
+    args:
+      device: cpu
+      parallel: false
+
+Data: !include ../../Sequence/TartanAir_example.yaml
+Preprocess: !include ../Common/Preprocess.yaml

@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+results/**/color/
+results/**/depth/
+results/**/*.db3
+results/**/*.bag

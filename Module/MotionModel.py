@@ -145,6 +145,39 @@ class StaticMotionModel(IMotionModel[StereoFrame]):
     def is_valid_config(cls, config: SimpleNamespace | None) -> None: return
 
 
+class ConstantVelocityMotionModel(IMotionModel[StereoFrame]):
+    """
+    Constant Velocity Motion Model on SE(3) Lie Group:
+    T_t^{(0)} = T_{t-1} @ (T_{t-2}^{-1} @ T_{t-1})
+    Replaces heavy neural network (TartanVO) pose initialization, saving ~1.5 GB VRAM.
+    """
+    def __init__(self, config: SimpleNamespace):
+        super().__init__(config)
+        self.prev_pose: pp.LieTensor | None = None
+        self.prev_prev_pose: pp.LieTensor | None = None
+
+    def predict(self, frame: StereoFrame, flow: torch.Tensor | None, depth: torch.Tensor | None) -> pp.LieTensor:
+        if self.prev_pose is None:
+            self.prev_pose = pp.identity_SE3()
+            return pp.identity_SE3()
+        if self.prev_prev_pose is None:
+            return self.prev_pose
+        
+        # Relative motion between t-2 and t-1: Delta_T = T_{t-2}^(-1) @ T_{t-1}
+        delta_T = self.prev_prev_pose.Inv() @ self.prev_pose
+        # Constant velocity prediction: T_t = T_{t-1} @ Delta_T
+        pred_pose = self.prev_pose @ delta_T
+        return pred_pose
+
+    def update(self, pose: pp.LieTensor) -> None:
+        if self.prev_pose is not None:
+            self.prev_prev_pose = self.prev_pose.clone()
+        self.prev_pose = pose.clone()
+
+    @classmethod
+    def is_valid_config(cls, config: SimpleNamespace | None) -> None: return
+
+
 class ReadPoseFile(IMotionModel[StereoFrame]):
     """
     Use an external file of Nx7 SE3 poses as motion model output poses.

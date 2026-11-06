@@ -46,3 +46,19 @@ SLURM.sh
 !**/__init__.pyi
 !**/__main__.py
 !**/__main__.pyi
+
+# Large datasets, rosbags, third-party sub-builds & presentation cache
+*.db3
+*.db3-*
+*.zip
+*.tar.gz
+*.exe
+*.fmt
+Data/
+ORB_SLAM3_Windows/
+mac_rgbd_vio/data/
+**/.build/
+**/output/
+**/junk/
+
+

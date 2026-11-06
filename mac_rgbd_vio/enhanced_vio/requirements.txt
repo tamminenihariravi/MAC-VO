@@ -1,0 +1,6 @@
+numpy>=1.24
+opencv-python>=4.8
+matplotlib>=3.7
+PyYAML>=6.0
+# Required only for live hardware or SDK recording; replay/evaluation do not import it.
+pyrealsense2>=2.54

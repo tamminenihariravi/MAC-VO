@@ -1,0 +1,10 @@
+# OptiTrack-Calibrated Feature Measurement Uncertainty Model
+# Fitted on RealSense D435if active stereo tracking ground truth
+sigma_base_px: 4.115715
+gamma_fb: 0.050000
+alpha_structure_tensor: 0.010000
+constant_sigma_u: 4.179372
+constant_sigma_v: 2.745669
+correlation_rho: 0.167715
+mean_nees_proposed: 1.8725
+two_sigma_coverage_percent: 96.16
